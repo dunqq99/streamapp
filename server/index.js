@@ -581,7 +581,7 @@ if (fs.existsSync(clientDistPath)) {
 }
 
 // ---- Dynamic SEO & Schema Fallback Route ----
-app.get('*', async (req, res, next) => {
+app.get(/.*/, async (req, res, next) => {
   const parsedUrl = req.path;
   
   // Bỏ qua các API, tĩnh, media và socket.io requests
