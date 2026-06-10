@@ -35,13 +35,13 @@ Kiem tra HLS:
 
 ```bash
 curl http://localhost:8001/api/stream/status
-curl http://localhost:8001/api/hls/obs_stream/index.m3u8
+curl http://localhost:8001/api/hls/main/index.m3u8
 ```
 
 Mac dinh `STREAM_SOURCE=file`, server se phat lap `videos/live.mp4` thanh:
 
 ```text
-/api/hls/obs_stream/index.m3u8
+/api/hls/main/index.m3u8
 ```
 
 Frontend duoc build voi `VITE_STREAM_FORMAT=hls`, nen player se doc HLS truc tiep.
@@ -78,5 +78,5 @@ docker compose up -d --build
 Publish RTMP vao:
 
 ```text
-rtmp://YOUR_VPS_IP:1935/live/obs_stream
+rtmp://YOUR_VPS_IP:1935/live/main
 ```

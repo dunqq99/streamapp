@@ -36,7 +36,7 @@ const { spawn } = require('child_process');
 const sharp = require('sharp');
 const SECRET_KEY = process.env.NMS_SECRET_KEY || 'cpc-secret-2026';
 const FFMPEG_PATH = process.env.FFMPEG_PATH || 'ffmpeg';
-const HLS_STREAM_NAME = process.env.HLS_STREAM_NAME || 'obs_stream';
+const HLS_STREAM_NAME = process.env.HLS_STREAM_NAME || 'main';
 const STREAM_SOURCE = (process.env.STREAM_SOURCE || 'rtmp').toLowerCase();
 const SOURCE_VIDEO_PATH = process.env.SOURCE_VIDEO_PATH || '/videos/live.mp4';
 const API_PORT = Number(process.env.PORT || 8001);
@@ -315,7 +315,6 @@ app.get('/api/stream/token', (req, res) => {
   // Token validity: 5 minutes = 300 seconds
   const expireTime = Math.floor(Date.now() / 1000) + 300; 
   // NodeMediaServer hash format: {streamPath}-{expireTime}-{secret}
-  // Hardcoded for obs_stream as it's the expected application path in .env
   const streamPath = `/live/${HLS_STREAM_NAME}`;
   
   const hashStr = `${streamPath}-${expireTime}-${SECRET_KEY}`;

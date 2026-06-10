@@ -118,7 +118,7 @@ export default function LiveStreamPage() {
     const fetchToken = async () => {
       try {
         const apiBaseUrl = import.meta.env.VITE_API_URL || 'https://api.dagacpc.live';
-        const streamName = import.meta.env.VITE_HLS_STREAM_NAME || 'obs_stream';
+        const streamName = import.meta.env.VITE_HLS_STREAM_NAME || 'main';
         const streamFormat = (import.meta.env.VITE_STREAM_FORMAT || 'flv').toLowerCase();
 
         if (streamFormat === 'hls') {

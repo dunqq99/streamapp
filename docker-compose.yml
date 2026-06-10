@@ -33,7 +33,7 @@ services:
       NMS_SECRET_KEY: ${NMS_SECRET_KEY:-change-this-secret}
       STREAM_SOURCE: ${STREAM_SOURCE:-file}
       SOURCE_VIDEO_PATH: ${SOURCE_VIDEO_PATH:-/videos/live.mp4}
-      HLS_STREAM_NAME: ${HLS_STREAM_NAME:-obs_stream}
+      HLS_STREAM_NAME: ${HLS_STREAM_NAME:-main}
       STREAM_LOOP: ${STREAM_LOOP:-1}
       STREAM_REALTIME: ${STREAM_REALTIME:-1}
       FILE_HLS_RESTART: ${FILE_HLS_RESTART:-1}
@@ -54,7 +54,7 @@ services:
       args:
         VITE_API_URL: ${PUBLIC_API_URL:-http://localhost:8001}
         VITE_STREAM_FORMAT: ${VITE_STREAM_FORMAT:-hls}
-        VITE_HLS_STREAM_NAME: ${HLS_STREAM_NAME:-obs_stream}
+        VITE_HLS_STREAM_NAME: ${HLS_STREAM_NAME:-main}
     restart: unless-stopped
     depends_on:
       - server

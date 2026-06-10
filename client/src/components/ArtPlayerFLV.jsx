@@ -17,8 +17,8 @@ export default function ArtPlayerFLV({ url, getInstance, ...rest }) {
     const isFxiOS = /FxiOS/i.test(navigator.userAgent); // Firefox on iOS
     
     if (finalType !== 'm3u8' && (isAppleWebKit || isIOSMobile || isCriOS || isFxiOS || !flvjs.isSupported())) {
-      // url input is typically: https://api.dagacpc.live/live/obs_stream.flv?sign=XXX
-      // We need it to be: https://api.dagacpc.live/api/hls/obs_stream/index.m3u8
+      // url input is typically: https://api.dagacpc.live/live/main.flv?sign=XXX
+      // We need it to be: https://api.dagacpc.live/api/hls/main/index.m3u8
       const urlWithoutSign = url.split('?')[0]; 
       finalUrl = urlWithoutSign.replace('/live/', '/api/hls/').replace('.flv', '/index.m3u8');
       finalType = 'm3u8';
