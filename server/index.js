@@ -44,6 +44,14 @@ const SOURCE_VIDEO_EXTENSIONS = (process.env.SOURCE_VIDEO_EXTENSIONS || '.mp4,.m
   .map(ext => ext.trim().toLowerCase())
   .filter(Boolean);
 const API_PORT = Number(process.env.PORT || 8001);
+const DEFAULT_BOT_SETTINGS = {
+  botEnabled: true,
+  botMinDelay: 10,
+  botMaxDelay: 30,
+  botScriptHeartbeat: 'Chào anh em nha | Khach12 | 2\nNay đông vui quá | ThanhG | 3',
+  botScript: 'Gà đá hay quá anh em! | Khach01 | 3\nTuyệt vời | DamMeGa | 8',
+  botScriptKickoff: 'Vo manh roi | TaiPro | 5\nHay qua | GaXanh | 2\nChet nhe may | DuyXuyen | 7\nAn roi | Khach | 1'
+};
 
 var nms = new NodeMediaServer(config)
 nms.run();
@@ -51,6 +59,17 @@ nms.run();
 let ffmpegProcess = null;
 let fileHlsProcess = null;
 let streamCleanupTimer = null;
+
+function readConfig() {
+  const raw = JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8'));
+  return {
+    ...raw,
+    settings: {
+      ...DEFAULT_BOT_SETTINGS,
+      ...(raw.settings || {})
+    }
+  };
+}
 
 function getHlsDir(streamName = HLS_STREAM_NAME) {
   return path.join(__dirname, 'media', 'live', streamName);
@@ -451,8 +470,7 @@ const CONFIG_FILE = path.join(__dirname, 'config.json');
 app.get('/api/config', (req, res) => {
   try {
     if (fs.existsSync(CONFIG_FILE)) {
-      const data = fs.readFileSync(CONFIG_FILE, 'utf8');
-      res.json({ success: true, data: JSON.parse(data) });
+      res.json({ success: true, data: readConfig() });
     } else {
       res.status(404).json({ success: false, message: 'Config not found' });
     }
@@ -475,7 +493,14 @@ app.post('/api/config', express.json(), (req, res) => {
   }
   
   try {
-    fs.writeFileSync(CONFIG_FILE, JSON.stringify(data, null, 2), 'utf8');
+    const mergedData = {
+      ...data,
+      settings: {
+        ...DEFAULT_BOT_SETTINGS,
+        ...(data.settings || {})
+      }
+    };
+    fs.writeFileSync(CONFIG_FILE, JSON.stringify(mergedData, null, 2), 'utf8');
     if (typeof global.runAutoBot === 'function') global.runAutoBot();
     res.json({ success: true, message: 'Saved successfully' });
   } catch (error) {
@@ -911,7 +936,7 @@ class AutoBotManager {
   loadConfig() {
     try {
       if (fs.existsSync(CONFIG_FILE)) {
-        this.configObj = JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8'));
+        this.configObj = readConfig();
         if (this.configObj?.settings?.botEnabled === true || String(this.configObj?.settings?.botEnabled) === 'true') {
           
           const scriptB = this.configObj?.settings?.botScript || '';

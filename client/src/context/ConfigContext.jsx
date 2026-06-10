@@ -1,4 +1,5 @@
 import React, { createContext, useState, useEffect } from 'react';
+import { apiUrl } from '../lib/api';
 
 export const ConfigContext = createContext(null);
 
@@ -8,7 +9,7 @@ export const ConfigProvider = ({ children }) => {
 
   const fetchConfig = async () => {
     try {
-      const res = await fetch('https://api.dagacpc.live/api/config');
+      const res = await fetch(apiUrl('/api/config'));
       const json = await res.json();
       if (json.success) {
         setConfig(json.data);

@@ -3,6 +3,7 @@ import { ConfigContext } from '../context/ConfigContext';
 import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
 import { io } from 'socket.io-client';
+import { apiUrl, assetUrl, getApiBaseUrl } from '../lib/api';
 
 export default function AdminPage() {
   const { config, refreshConfig } = useContext(ConfigContext);
@@ -36,7 +37,7 @@ export default function AdminPage() {
 
   useEffect(() => {
     if (activeTab === 'chat' && isAuthenticated) {
-      const s = io(import.meta.env.VITE_API_BASE_URL || 'https://api.dagacpc.live', { transports: ['websocket'] });
+      const s = io(getApiBaseUrl(), { transports: ['websocket'] });
       setSocket(s);
 
       s.on('chatHistory', (history) => setChatHistory(history));
@@ -61,7 +62,7 @@ export default function AdminPage() {
 
   const fetchArticles = async () => {
     try {
-      const res = await fetch('https://api.dagacpc.live/api/articles');
+      const res = await fetch(apiUrl('/api/articles'));
       const data = await res.json();
       if (data.success) {
         setArticles(data.articles);
@@ -73,7 +74,7 @@ export default function AdminPage() {
 
   const fetchCategories = async () => {
     try {
-      const res = await fetch('https://api.dagacpc.live/api/categories');
+      const res = await fetch(apiUrl('/api/categories'));
       const data = await res.json();
       if (data.success) {
         setCategories(data.categories);
@@ -108,7 +109,7 @@ export default function AdminPage() {
     e.preventDefault();
     if (password) {
       try {
-        const res = await fetch('https://api.dagacpc.live/api/verify-password', {
+        const res = await fetch(apiUrl('/api/verify-password'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ password })
@@ -128,7 +129,7 @@ export default function AdminPage() {
   const handleSaveConfig = async () => {
     setSaveStatus('Đang lưu...');
     try {
-      const res = await fetch('https://api.dagacpc.live/api/config', {
+      const res = await fetch(apiUrl('/api/config'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -165,7 +166,7 @@ export default function AdminPage() {
 
   const handleSaveCategory = async (cat) => {
     const isNew = cat.id.toString().startsWith('temp_');
-    const url = isNew ? 'https://api.dagacpc.live/api/categories' : `https://api.dagacpc.live/api/categories/${cat.id}`;
+    const url = isNew ? apiUrl('/api/categories') : apiUrl(`/api/categories/${cat.id}`);
     const method = isNew ? 'POST' : 'PUT';
 
     try {
@@ -193,7 +194,7 @@ export default function AdminPage() {
       return;
     }
     try {
-      const res = await fetch(`https://api.dagacpc.live/api/categories/${id}`, {
+      const res = await fetch(apiUrl(`/api/categories/${id}`), {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password })
@@ -208,7 +209,7 @@ export default function AdminPage() {
 
   const handleSaveArticle = async (article) => {
     const isNew = article.id.toString().startsWith('temp_');
-    const url = isNew ? 'https://api.dagacpc.live/api/articles' : `https://api.dagacpc.live/api/articles/${article.id}`;
+    const url = isNew ? apiUrl('/api/articles') : apiUrl(`/api/articles/${article.id}`);
     const method = isNew ? 'POST' : 'PUT';
 
     try {
@@ -236,7 +237,7 @@ export default function AdminPage() {
       return;
     }
     try {
-      const res = await fetch(`https://api.dagacpc.live/api/articles/${id}`, {
+      const res = await fetch(apiUrl(`/api/articles/${id}`), {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password })
@@ -253,7 +254,7 @@ export default function AdminPage() {
     const formData = new FormData();
     formData.append('image', file);
     try {
-      const res = await fetch('https://api.dagacpc.live/api/upload', {
+      const res = await fetch(apiUrl('/api/upload'), {
         method: 'POST',
         body: formData
       });
@@ -284,7 +285,7 @@ export default function AdminPage() {
     const formData = new FormData();
     formData.append('image', file);
     try {
-      const res = await fetch('https://api.dagacpc.live/api/upload', {
+      const res = await fetch(apiUrl('/api/upload'), {
         method: 'POST',
         body: formData
       });
@@ -342,14 +343,14 @@ export default function AdminPage() {
             const formData = new FormData();
             formData.append('image', file);
             try {
-              const res = await fetch('https://api.dagacpc.live/api/upload', {
+              const res = await fetch(apiUrl('/api/upload'), {
                 method: 'POST',
                 body: formData
               });
               const data = await res.json();
               if (data.success) {
                 const range = this.quill.getSelection(true);
-                this.quill.insertEmbed(range.index, 'image', `https://api.dagacpc.live${data.url}`);
+                this.quill.insertEmbed(range.index, 'image', assetUrl(data.url));
               } else {
                 alert("Upload ảnh thất bại: " + data.message);
               }

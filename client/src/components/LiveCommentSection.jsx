@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useContext } from 'react';
 import { io } from 'socket.io-client';
 import { ConfigContext } from '../context/ConfigContext';
+import { getApiBaseUrl } from '../lib/api';
 
 const QUICK_EMOJIS = ["😂", "🤣", "😍", "🔥", "💯", "👍", "👏", "😡", "😱", "😭", "🐓", "💸", "🍺", "⚽", "🏆", "🐔", "🍗", "💰", "❤️", "🙌"];
 
@@ -78,7 +79,7 @@ export default function LiveCommentSection() {
     }
 
     // Connect to WebSockets
-    socketRef.current = io(import.meta.env.VITE_API_BASE_URL || 'https://api.dagacpc.live', { transports: ['websocket'] });
+    socketRef.current = io(getApiBaseUrl(), { transports: ['websocket'] });
 
     socketRef.current.on('connect', () => {
       console.log('Connected to Live Chat Server');

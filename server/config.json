@@ -72,6 +72,12 @@
     "scriptTags": "",
     "vaoCayGaLink": "#",
     "lienHeLink": "#",
+    "botEnabled": true,
+    "botMinDelay": 10,
+    "botMaxDelay": 30,
+    "botScriptHeartbeat": "Chào anh em nha | Khach12 | 2\nNay đông vui quá | ThanhG | 3",
+    "botScript": "Gà đá hay quá anh em! | Khach01 | 3\nTuyệt vời | DamMeGa | 8",
+    "botScriptKickoff": "Vô mánh rồi | TaiPro | 5\nHay quá | GaXanh | 2\nChết nhe mày | DuyXuyen | 7\nĂn rồi | Khach | 1",
     "footerText": "© 2026 DagaCPC.Live - Kênh trực tiếp đá gà Thomo Tốc độ cao",
     "footerDescription": "DagaCPC.Live là nền tảng tường thuật trực tiếp đá gà Thomo, đá gà CPC1, CPC2, CPC3, CPC4 với chất lượng Full HD, đường truyền tốc độ cao và hoàn toàn miễn phí.",
     "footerTags": "Đá gà trực tiếp, Đá gà Thomo, Đá gà CPC1, Trực tiếp đá gà Campuchia"
