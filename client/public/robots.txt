@@ -1,0 +1,24 @@
+User-agent: *
+
+# Block admin panel
+Disallow: /admin
+Disallow: /admin/
+
+# Block API endpoints (served by backend)
+Disallow: /api/
+Disallow: /api/config
+Disallow: /api/articles
+Disallow: /api/auth
+Disallow: /api/settings
+
+# Block HLS stream files
+Disallow: /hls/
+Disallow: /live/
+
+# Allow public content
+Allow: /
+Allow: /tin-tuc
+Allow: /tin-tuc/
+
+# Sitemap
+Sitemap: https://dagacpc.live/sitemap.xml

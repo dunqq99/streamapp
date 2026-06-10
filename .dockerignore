@@ -1,0 +1,11 @@
+**/node_modules
+**/dist
+**/.env
+**/.env.*
+**/*.zip
+**/*.log
+server/media
+server/uploads
+server/.puppeteer-cache
+videos
+.git
