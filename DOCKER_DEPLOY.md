@@ -19,11 +19,15 @@ SITE_URL=https://ten-mien-cua-ban.com
 PUBLIC_API_URL=https://api.ten-mien-cua-ban.com
 ```
 
-Dat video nguon vao:
+Dat mot hoac nhieu video nguon vao:
 
 ```bash
-videos/live.mp4
+videos/
 ```
+
+Mac dinh `.env` dung `SOURCE_VIDEO_PATH=/videos`, server se tu gom cac file
+`.mp4`, `.mov`, `.m4v`, `.mkv`, `.webm` trong thu muc nay thanh playlist va
+phat lap nhu live stream.
 
 ## 2. Chay
 
@@ -38,7 +42,7 @@ curl http://localhost:8001/api/stream/status
 curl http://localhost:8001/api/hls/main/index.m3u8
 ```
 
-Mac dinh `STREAM_SOURCE=file`, server se phat lap `videos/live.mp4` thanh:
+Mac dinh `STREAM_SOURCE=file`, server se phat lap playlist trong `videos/` thanh:
 
 ```text
 /api/hls/main/index.m3u8
@@ -48,10 +52,10 @@ Frontend duoc build voi `VITE_STREAM_FORMAT=hls`, nen player se doc HLS truc tie
 
 ## 3. Doi video
 
-Thay file:
+Them, xoa, hoac thay file trong:
 
 ```bash
-videos/live.mp4
+videos/
 ```
 
 Khoi dong lai server:

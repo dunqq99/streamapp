@@ -38,7 +38,11 @@ const SECRET_KEY = process.env.NMS_SECRET_KEY || 'cpc-secret-2026';
 const FFMPEG_PATH = process.env.FFMPEG_PATH || 'ffmpeg';
 const HLS_STREAM_NAME = process.env.HLS_STREAM_NAME || 'main';
 const STREAM_SOURCE = (process.env.STREAM_SOURCE || 'rtmp').toLowerCase();
-const SOURCE_VIDEO_PATH = process.env.SOURCE_VIDEO_PATH || '/videos/live.mp4';
+const SOURCE_VIDEO_PATH = process.env.SOURCE_VIDEO_PATH || '/videos';
+const SOURCE_VIDEO_EXTENSIONS = (process.env.SOURCE_VIDEO_EXTENSIONS || '.mp4,.mov,.m4v,.mkv,.webm')
+  .split(',')
+  .map(ext => ext.trim().toLowerCase())
+  .filter(Boolean);
 const API_PORT = Number(process.env.PORT || 8001);
 
 var nms = new NodeMediaServer(config)
@@ -80,6 +84,50 @@ function buildHlsArgs(input, outputFile, extraInputArgs = []) {
   ];
 }
 
+function escapeConcatPath(filePath) {
+  return filePath.replace(/'/g, "'\\''");
+}
+
+function prepareVideoInput(sourcePath) {
+  const stat = fs.statSync(sourcePath);
+
+  if (stat.isFile()) {
+    const loopArgs = process.env.STREAM_LOOP === '0' ? [] : ['-stream_loop', '-1'];
+    return {
+      label: sourcePath,
+      input: sourcePath,
+      args: loopArgs,
+      count: 1
+    };
+  }
+
+  if (!stat.isDirectory()) {
+    throw new Error(`Nguồn video không phải file hoặc thư mục: ${sourcePath}`);
+  }
+
+  const files = fs.readdirSync(sourcePath)
+    .filter(file => SOURCE_VIDEO_EXTENSIONS.includes(path.extname(file).toLowerCase()))
+    .sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }))
+    .map(file => path.join(sourcePath, file));
+
+  if (files.length === 0) {
+    throw new Error(`Không tìm thấy video trong thư mục ${sourcePath}. Đuôi hỗ trợ: ${SOURCE_VIDEO_EXTENSIONS.join(', ')}`);
+  }
+
+  const playlistPath = path.join(__dirname, 'media', `${HLS_STREAM_NAME}-playlist.ffconcat`);
+  const playlistContent = files.map(file => `file '${escapeConcatPath(file)}'`).join('\n') + '\n';
+  fs.mkdirSync(path.dirname(playlistPath), { recursive: true });
+  fs.writeFileSync(playlistPath, playlistContent);
+
+  const loopArgs = process.env.STREAM_LOOP === '0' ? [] : ['-stream_loop', '-1'];
+  return {
+    label: `${sourcePath} (${files.length} videos)`,
+    input: playlistPath,
+    args: [...loopArgs, '-f', 'concat', '-safe', '0'],
+    count: files.length
+  };
+}
+
 function startFileHlsSource() {
   if (STREAM_SOURCE !== 'file') return;
   if (!fs.existsSync(SOURCE_VIDEO_PATH)) {
@@ -89,11 +137,18 @@ function startFileHlsSource() {
 
   const hlsDir = resetHlsDir(HLS_STREAM_NAME);
   const outputFile = path.join(hlsDir, 'index.m3u8');
-  const loopArgs = process.env.STREAM_LOOP === '0' ? [] : ['-stream_loop', '-1'];
   const realtimeArgs = process.env.STREAM_REALTIME === '0' ? [] : ['-re'];
+  let videoInput;
 
-  console.log(`[FILE-HLS] Phát ${SOURCE_VIDEO_PATH} -> /api/hls/${HLS_STREAM_NAME}/index.m3u8`);
-  fileHlsProcess = spawn(FFMPEG_PATH, buildHlsArgs(SOURCE_VIDEO_PATH, outputFile, [...realtimeArgs, ...loopArgs]));
+  try {
+    videoInput = prepareVideoInput(SOURCE_VIDEO_PATH);
+  } catch (error) {
+    console.error(`[FILE-HLS] ${error.message}`);
+    return;
+  }
+
+  console.log(`[FILE-HLS] Phát ${videoInput.label} -> /api/hls/${HLS_STREAM_NAME}/index.m3u8`);
+  fileHlsProcess = spawn(FFMPEG_PATH, buildHlsArgs(videoInput.input, outputFile, [...realtimeArgs, ...videoInput.args]));
 
   fileHlsProcess.stderr.on('data', (data) => {
     console.log(`[FILE-HLS] ${data.toString()}`);
@@ -332,6 +387,7 @@ app.get('/api/stream/status', (req, res) => {
     source: STREAM_SOURCE,
     streamName: HLS_STREAM_NAME,
     sourceVideoPath: STREAM_SOURCE === 'file' ? SOURCE_VIDEO_PATH : null,
+    sourceVideoExtensions: STREAM_SOURCE === 'file' ? SOURCE_VIDEO_EXTENSIONS : null,
     hlsReady: fs.existsSync(playlistPath),
     hlsUrl: `/api/hls/${HLS_STREAM_NAME}/index.m3u8`,
     fileHlsRunning: Boolean(fileHlsProcess),
