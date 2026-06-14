@@ -2,13 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import LiveStreamPage from './LiveStreamPage';
 import ArticleList from '../components/ArticleList';
+import { apiUrl } from '../lib/api';
 
 export default function DynamicRoutePage() {
   const { slug } = useParams();
   const [isCategory, setIsCategory] = useState(null);
 
   useEffect(() => {
-    fetch('https://api.dagacpc.live/api/categories')
+    fetch(apiUrl('/api/categories'))
       .then(res => res.json())
       .then(data => {
         if (data.success) {

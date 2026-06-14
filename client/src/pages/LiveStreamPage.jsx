@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext, Suspense, lazy } from 'react';
 import { useParams } from 'react-router-dom';
 import { ConfigContext } from '../context/ConfigContext';
+import { apiUrl, getApiBaseUrl } from '../lib/api';
 
 // Lazy load heavy video player libraries (Artplayer + FLV.js) to slash chunk size and fix 710ms TBT
 const ArtPlayerFLV = lazy(() => import('../components/ArtPlayerFLV'));
@@ -73,7 +74,7 @@ export default function LiveStreamPage() {
       "name": seoData.title || "Xem Trực Tiếp Đá Gà Thomo Hôm Nay",
       "description": seoData.metaDesc || "Xem trực tiếp đá gà Thomo mới nhất hôm nay. CPC1, CPC2, CPC3, CPC4 cực nét, không giật lag.",
       "thumbnailUrl": [
-        "https://api.dagacpc.live/favicon.svg"
+        apiUrl('/favicon.svg')
       ],
       "uploadDate": new Date().toISOString(),
       "contentUrl": window.location.href,
@@ -117,7 +118,7 @@ export default function LiveStreamPage() {
   useEffect(() => {
     const fetchToken = async () => {
       try {
-        const apiBaseUrl = import.meta.env.VITE_API_URL || 'https://api.dagacpc.live';
+        const apiBaseUrl = getApiBaseUrl();
         const streamName = import.meta.env.VITE_HLS_STREAM_NAME || 'main';
         const streamFormat = (import.meta.env.VITE_STREAM_FORMAT || 'flv').toLowerCase();
 

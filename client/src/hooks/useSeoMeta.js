@@ -1,8 +1,9 @@
 import { useEffect } from 'react';
+import { apiUrl, getSiteBaseUrl } from '../lib/api';
 
 const SITE_NAME = 'DagaCPC.Live';
-const BASE_URL = 'https://dagacpc.live';
-const DEFAULT_OG_IMAGE = 'https://api.dagacpc.live/og-default.jpg';
+const BASE_URL = getSiteBaseUrl();
+const DEFAULT_OG_IMAGE = apiUrl('/og-default.jpg');
 
 /**
  * Custom hook quản lý toàn bộ SEO meta tags cho một trang.

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { apiUrl, assetUrl, getSiteBaseUrl } from '../lib/api';
 
 export default function ArticleDetail() {
   const { categorySlug, articleSlug } = useParams();
@@ -7,7 +8,7 @@ export default function ArticleDetail() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`https://api.dagacpc.live/api/articles/${categorySlug}/${articleSlug}`)
+    fetch(apiUrl(`/api/articles/${categorySlug}/${articleSlug}`))
       .then(res => res.json())
       .then(data => {
         if (data.success) {
@@ -44,21 +45,21 @@ export default function ArticleDetail() {
             "headline": data.article.title,
             "description": shortDesc,
             "image": [
-              data.article.image_url ? `https://api.dagacpc.live${data.article.image_url}` : "https://api.dagacpc.live/favicon.svg"
+              data.article.image_url ? assetUrl(data.article.image_url) : assetUrl('/favicon.svg')
             ],
             "datePublished": data.article.created_at || new Date().toISOString(),
             "dateModified": data.article.created_at || new Date().toISOString(),
             "author": [{
               "@type": "Person",
               "name": "BTV DagaCPC",
-              "url": "https://dagacpc.live"
+              "url": getSiteBaseUrl()
             }],
             "publisher": {
               "@type": "Organization",
               "name": "DagaCPC.Live",
               "logo": {
                 "@type": "ImageObject",
-                "url": "https://api.dagacpc.live/favicon.svg"
+                "url": assetUrl('/favicon.svg')
               }
             },
             "mainEntityOfPage": {
@@ -90,7 +91,7 @@ export default function ArticleDetail() {
   return (
     <div style={{ background: 'var(--panel-bg)', borderRadius: '16px', overflow: 'hidden', border: '1px solid var(--panel-border)' }}>
       {article.image_url && (
-        <img src={`https://api.dagacpc.live${article.image_url}`} alt={article.title} style={{ width: '100%', maxHeight: '400px', objectFit: 'cover' }} />
+        <img src={assetUrl(article.image_url)} alt={article.title} style={{ width: '100%', maxHeight: '400px', objectFit: 'cover' }} />
       )}
       <div style={{ padding: '2rem' }}>
         <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem', alignItems: 'center' }}>

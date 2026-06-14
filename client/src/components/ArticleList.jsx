@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { apiUrl, assetUrl } from '../lib/api';
 export default function ArticleList({ categorySlug }) {
   const [articles, setArticles] = useState([]);
 
   useEffect(() => {
-    const url = categorySlug ? `https://api.dagacpc.live/api/articles?category=${categorySlug}` : 'https://api.dagacpc.live/api/articles';
+    const url = categorySlug ? apiUrl(`/api/articles?category=${categorySlug}`) : apiUrl('/api/articles');
     fetch(url)
       .then(res => res.json())
       .then(data => {
@@ -27,7 +28,7 @@ export default function ArticleList({ categorySlug }) {
           return (
             <Link to={targetLink} key={article.id} style={{ textDecoration: 'none', background: 'var(--panel-bg)', border: '1px solid var(--panel-border)', borderRadius: '12px', overflow: 'hidden', transition: 'transform 0.2s, background 0.2s', cursor: 'pointer', display: 'flex', flexDirection: 'column' }} onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.background = 'var(--card-hover)'; }} onMouseOut={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.background = 'var(--panel-bg)'; }}>
               {article.image_url && (
-                <img src={`https://api.dagacpc.live${article.image_url}`} alt={article.title} style={{ width: '100%', height: '180px', objectFit: 'cover' }} />
+                <img src={assetUrl(article.image_url)} alt={article.title} style={{ width: '100%', height: '180px', objectFit: 'cover' }} />
               )}
               <div style={{ padding: '1.5rem', flex: 1, display: 'flex', flexDirection: 'column' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>

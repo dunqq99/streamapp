@@ -11,6 +11,7 @@ import AdminPage from './pages/AdminPage';
 import DynamicRoutePage from './pages/DynamicRoutePage';
 import ArticleDetail from './pages/ArticleDetail';
 import { BrowserRouter, Routes, Route, Outlet } from 'react-router-dom';
+import { assetUrl } from './lib/api';
 
 function MainLayout() {
   const [isScheduleOpen, setIsScheduleOpen] = useState(false);
@@ -46,7 +47,7 @@ function AppContent() {
         link.rel = 'icon';
         document.head.appendChild(link);
       }
-      link.href = `https://api.dagacpc.live${config.settings.faviconUrl}`;
+      link.href = assetUrl(config.settings.faviconUrl);
     }
 
     if (config?.settings?.scriptTags) {

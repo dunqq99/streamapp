@@ -468,7 +468,7 @@ export default function AdminPage() {
                 <input type="file" accept="image/*" onChange={(e) => { if(e.target.files[0]) handleUploadLogo(e.target.files[0], 'favicon') }} style={{ ...inputStyle, padding: '0.4rem' }} />
                 {editConfig.settings.faviconUrl && (
                   <div style={{ marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                    <img src={`https://api.dagacpc.live${editConfig.settings.faviconUrl}`} alt="Favicon" style={{ height: '35px', objectFit: 'contain', background: 'rgba(100,100,100,0.1)', padding: '2px', borderRadius: '4px' }} />
+                    <img src={assetUrl(editConfig.settings.faviconUrl)} alt="Favicon" style={{ height: '35px', objectFit: 'contain', background: 'rgba(100,100,100,0.1)', padding: '2px', borderRadius: '4px' }} />
                     <button onClick={() => updateSetting('faviconUrl', '')} style={{ background: '#ef4444', color: 'white', border: 'none', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.8rem' }}>Gỡ Bỏ</button>
                   </div>
                 )}
@@ -480,7 +480,7 @@ export default function AdminPage() {
                 <input type="file" accept="image/*" onChange={(e) => { if(e.target.files[0]) handleUploadLogo(e.target.files[0], 'light') }} style={{ ...inputStyle, padding: '0.4rem' }} />
                 {(editConfig.settings.logoUrlLight || editConfig.settings.logoUrl) && (
                   <div style={{ marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                    <img src={`https://api.dagacpc.live${editConfig.settings.logoUrlLight || editConfig.settings.logoUrl}`} alt="Logo Light" style={{ height: '35px', objectFit: 'contain', background: '#ccc', padding: '2px', borderRadius: '4px' }} />
+                    <img src={assetUrl(editConfig.settings.logoUrlLight || editConfig.settings.logoUrl)} alt="Logo Light" style={{ height: '35px', objectFit: 'contain', background: '#ccc', padding: '2px', borderRadius: '4px' }} />
                     <button onClick={() => updateSetting('logoUrlLight', '')} style={{ background: '#ef4444', color: 'white', border: 'none', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.8rem' }}>Gỡ Bỏ</button>
                   </div>
                 )}
@@ -490,7 +490,7 @@ export default function AdminPage() {
                 <input type="file" accept="image/*" onChange={(e) => { if(e.target.files[0]) handleUploadLogo(e.target.files[0], 'dark') }} style={{ ...inputStyle, padding: '0.4rem' }} />
                 {(editConfig.settings.logoUrlDark || editConfig.settings.logoUrl) && (
                   <div style={{ marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                    <img src={`https://api.dagacpc.live${editConfig.settings.logoUrlDark || editConfig.settings.logoUrl}`} alt="Logo Dark" style={{ height: '35px', objectFit: 'contain', background: '#000', padding: '2px', borderRadius: '4px' }} />
+                    <img src={assetUrl(editConfig.settings.logoUrlDark || editConfig.settings.logoUrl)} alt="Logo Dark" style={{ height: '35px', objectFit: 'contain', background: '#000', padding: '2px', borderRadius: '4px' }} />
                     <button onClick={() => updateSetting('logoUrlDark', '')} style={{ background: '#ef4444', color: 'white', border: 'none', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.8rem' }}>Gỡ Bỏ</button>
                   </div>
                 )}
@@ -595,7 +595,7 @@ export default function AdminPage() {
                 </div>
                 <div style={{ width: '150px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
                   {art.image_url ? (
-                    <img src={`https://api.dagacpc.live${art.image_url}`} alt="Thumbnail" style={{ width: '100%', height: '80px', objectFit: 'cover', borderRadius: '4px' }} />
+                    <img src={assetUrl(art.image_url)} alt="Thumbnail" style={{ width: '100%', height: '80px', objectFit: 'cover', borderRadius: '4px' }} />
                   ) : (
                     <div style={{ width: '100%', height: '80px', background: 'var(--panel-border)', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>Chưa có ảnh</div>
                   )}

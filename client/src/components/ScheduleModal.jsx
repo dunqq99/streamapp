@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { apiUrl } from '../lib/api';
 
 export default function ScheduleModal({ isOpen, onClose }) {
   const [scheduleHTML, setScheduleHTML] = useState('');
@@ -8,7 +9,7 @@ export default function ScheduleModal({ isOpen, onClose }) {
   useEffect(() => {
     if (isOpen && !scheduleHTML) {
       setLoading(true);
-      fetch('https://api.dagacpc.live/api/schedule')
+      fetch(apiUrl('/api/schedule'))
         .then(res => res.json())
         .then(data => {
           if (data.success && data.html) {

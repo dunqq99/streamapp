@@ -2,6 +2,7 @@ import React, { useContext, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ThemeContext } from '../context/ThemeContext';
 import { ConfigContext } from '../context/ConfigContext';
+import { assetUrl } from '../lib/api';
 
 export default function Header({ onOpenSchedule }) {
   const { theme, toggleTheme } = useContext(ThemeContext);
@@ -14,8 +15,7 @@ export default function Header({ onOpenSchedule }) {
     let target = (theme === 'dark' ? logoUrlDark : logoUrlLight) || logoUrl;
     if (!target || typeof target !== 'string' || target.trim() === '' || target === 'null' || target === 'undefined') return null;
     target = target.trim();
-    if (target.startsWith('http')) return target;
-    return `https://api.dagacpc.live${target.startsWith('/') ? '' : '/'}${target}`;
+    return assetUrl(target);
   };
 
   const logoSrc = resolveLogoUrl();
