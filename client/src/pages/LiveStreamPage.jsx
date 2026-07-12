@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext, Suspense, lazy } from 'react';
 import { useParams } from 'react-router-dom';
 import { ConfigContext } from '../context/ConfigContext';
 import { apiUrl, getApiBaseUrl } from '../lib/api';
+import EmbedPlayer from '../components/EmbedPlayer';
 
 // Lazy load heavy video player libraries (Artplayer + FLV.js) to slash chunk size and fix 710ms TBT
 const ArtPlayerFLV = lazy(() => import('../components/ArtPlayerFLV'));
@@ -45,6 +46,7 @@ export default function LiveStreamPage() {
   const seoData = getChannelData(finalSlug, config?.seoDictionary);
 
   const [streamUrl, setStreamUrl] = useState(null);
+  const [streamFormat, setStreamFormat] = useState(null);
   const [error, setError] = useState(false);
 
   useEffect(() => {
@@ -120,9 +122,20 @@ export default function LiveStreamPage() {
       try {
         const apiBaseUrl = getApiBaseUrl();
         const streamName = import.meta.env.VITE_HLS_STREAM_NAME || 'main';
-        const streamFormat = (import.meta.env.VITE_STREAM_FORMAT || 'flv').toLowerCase();
+        const playerMode = (import.meta.env.VITE_STREAM_FORMAT || 'flv').toLowerCase();
+        setStreamFormat(playerMode);
 
-        if (streamFormat === 'hls') {
+        if (playerMode === 'iframe') {
+          const embedUrl = import.meta.env.VITE_EMBED_URL || '';
+          if (embedUrl) {
+            setStreamUrl(embedUrl);
+            return;
+          }
+          setError(true);
+          return;
+        }
+
+        if (playerMode === 'hls') {
           const hlsUrl = import.meta.env.VITE_HLS_STREAM_URL || `${apiBaseUrl}/api/hls/${streamName}/index.m3u8`;
           setStreamUrl(hlsUrl);
           return;
@@ -169,16 +182,24 @@ export default function LiveStreamPage() {
               </div>
             )}
             {streamUrl && (
-              <Suspense fallback={
-                <div style={{ display: 'flex', height: '100%', width: '100%', alignItems: 'center', justifyContent: 'center', background: 'var(--panel-bg)'}}>
-                  <div className="pulse-circle"></div>
-                </div>
-              }>
-                <ArtPlayerFLV 
-                  url={streamUrl} 
+              streamFormat === 'iframe' ? (
+                <EmbedPlayer
+                  url={streamUrl}
+                  title={seoData.title}
                   className="player-instance"
                 />
-              </Suspense>
+              ) : (
+                <Suspense fallback={
+                  <div style={{ display: 'flex', height: '100%', width: '100%', alignItems: 'center', justifyContent: 'center', background: 'var(--panel-bg)'}}>
+                    <div className="pulse-circle"></div>
+                  </div>
+                }>
+                  <ArtPlayerFLV 
+                    url={streamUrl} 
+                    className="player-instance"
+                  />
+                </Suspense>
+              )
             )}
           </div>
           <div className="action-buttons-wrapper">

@@ -55,6 +55,7 @@ services:
         VITE_API_URL: ${PUBLIC_API_URL:-http://localhost:8001}
         VITE_STREAM_FORMAT: ${VITE_STREAM_FORMAT:-hls}
         VITE_HLS_STREAM_NAME: ${HLS_STREAM_NAME:-main}
+        VITE_EMBED_URL: ${VITE_EMBED_URL:-}
     restart: unless-stopped
     depends_on:
       - server
