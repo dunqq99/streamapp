@@ -6,6 +6,7 @@ import EmbedPlayer from '../components/EmbedPlayer';
 
 // Lazy load heavy video player libraries (Artplayer + FLV.js) to slash chunk size and fix 710ms TBT
 const ArtPlayerFLV = lazy(() => import('../components/ArtPlayerFLV'));
+const HlsVideoPlayer = lazy(() => import('../components/HlsVideoPlayer'));
 // Lazy load chat to defer Socket.io and Emoji logic from Main Thread during critical path
 const LiveCommentSection = lazy(() => import('../components/LiveCommentSection'));
 
@@ -188,6 +189,17 @@ export default function LiveStreamPage() {
                   title={seoData.title}
                   className="player-instance"
                 />
+              ) : streamFormat === 'hls' ? (
+                <Suspense fallback={
+                  <div style={{ display: 'flex', height: '100%', width: '100%', alignItems: 'center', justifyContent: 'center', background: 'var(--panel-bg)'}}>
+                    <div className="pulse-circle"></div>
+                  </div>
+                }>
+                  <HlsVideoPlayer
+                    url={streamUrl}
+                    className="player-instance"
+                  />
+                </Suspense>
               ) : (
                 <Suspense fallback={
                   <div style={{ display: 'flex', height: '100%', width: '100%', alignItems: 'center', justifyContent: 'center', background: 'var(--panel-bg)'}}>
