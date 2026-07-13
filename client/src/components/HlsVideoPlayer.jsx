@@ -11,6 +11,8 @@ export default function HlsVideoPlayer({ url, className = '', ...rest }) {
 
     let hls;
     let destroyed = false;
+    let lastTime = 0;
+    let stalledTicks = 0;
 
     const getLiveEdge = () => {
       if (hls && Number.isFinite(hls.liveSyncPosition)) {
@@ -54,6 +56,8 @@ export default function HlsVideoPlayer({ url, className = '', ...rest }) {
         maxLiveSyncPlaybackRate: 1.5,
         lowLatencyMode: true,
         liveDurationInfinity: true,
+        backBufferLength: 10,
+        maxBufferLength: 8,
       });
 
       hls.on(Hls.Events.ERROR, (_, data) => {
@@ -75,6 +79,41 @@ export default function HlsVideoPlayer({ url, className = '', ...rest }) {
     }
 
     const handlePlay = () => jumpToLive(true);
+    const watchdog = window.setInterval(() => {
+      if (destroyed || video.paused) {
+        lastTime = video.currentTime || 0;
+        stalledTicks = 0;
+        return;
+      }
+
+      const liveEdge = getLiveEdge();
+      const currentTime = video.currentTime || 0;
+      const progressed = Math.abs(currentTime - lastTime) > 0.15;
+      const drift = Number.isFinite(liveEdge) ? liveEdge - currentTime : 0;
+
+      if (drift > 4) {
+        jumpToLive(true);
+      }
+
+      if (!progressed || video.readyState < 2) {
+        stalledTicks += 1;
+      } else {
+        stalledTicks = 0;
+      }
+
+      if (stalledTicks >= 2) {
+        if (hls) {
+          hls.recoverMediaError();
+          hls.startLoad(-1);
+        }
+        jumpToLive(true);
+        play(false);
+        stalledTicks = 0;
+      }
+
+      lastTime = video.currentTime || 0;
+    }, 3000);
+
     const handleVisibility = () => {
       if (!document.hidden) {
         jumpToLive(true);
@@ -86,6 +125,7 @@ export default function HlsVideoPlayer({ url, className = '', ...rest }) {
 
     return () => {
       destroyed = true;
+      window.clearInterval(watchdog);
       video.removeEventListener('play', handlePlay);
       document.removeEventListener('visibilitychange', handleVisibility);
       if (hls) hls.destroy();
