@@ -93,13 +93,18 @@ function buildHlsArgs(input, outputFile, extraInputArgs = []) {
     '-c:v', process.env.HLS_VIDEO_CODEC || 'libx264',
     '-preset', process.env.HLS_PRESET || 'veryfast',
     '-tune', 'zerolatency',
+    '-g', process.env.HLS_GOP || '60',
+    '-keyint_min', process.env.HLS_GOP || '60',
+    '-sc_threshold', '0',
+    '-x264-params', `keyint=${process.env.HLS_GOP || '60'}:min-keyint=${process.env.HLS_GOP || '60'}:scenecut=0:repeat-headers=1`,
+    '-force_key_frames', `expr:gte(t,n_forced*${process.env.HLS_TIME || '2'})`,
     '-c:a', 'aac',
     '-ar', '44100',
     '-b:a', process.env.HLS_AUDIO_BITRATE || '128k',
     '-f', 'hls',
     '-hls_time', process.env.HLS_TIME || '2',
     '-hls_list_size', process.env.HLS_LIST_SIZE || '5',
-    '-hls_flags', 'delete_segments+append_list+split_by_time',
+    '-hls_flags', 'delete_segments+independent_segments',
     outputFile
   ];
 }
