@@ -205,6 +205,9 @@ export default function LiveStreamPage() {
           <div className="action-buttons-wrapper">
             <a href={config?.settings?.vaoCayGaLink || "#"} target="_blank" className="action-btn btn-register-action" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Vào Cây Gà</a>
             <a href={config?.settings?.lienHeLink || "#"} target="_blank" className="action-btn btn-contact-action" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Liên Hệ CSKH</a>
+            {streamFormat === 'iframe' && streamUrl && (
+              <a href={streamUrl} target="_blank" rel="noopener noreferrer" className="action-btn btn-open-player" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Mở Video</a>
+            )}
           </div>
         </div>
         <div className="chat-wrapper">

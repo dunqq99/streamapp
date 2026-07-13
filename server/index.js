@@ -10,7 +10,7 @@ const config = {
     ping_timeout: 60
   },
   http: {
-    port: 8000,
+    port: Number(process.env.NMS_HTTP_PORT || 8000),
     allow_origin: '*',
     mediaroot: './media'
   },
@@ -59,6 +59,7 @@ nms.run();
 let ffmpegProcess = null;
 let fileHlsProcess = null;
 let streamCleanupTimer = null;
+let fileHlsRetryTimer = null;
 
 function readConfig() {
   const raw = JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8'));
@@ -149,8 +150,10 @@ function prepareVideoInput(sourcePath) {
 
 function startFileHlsSource() {
   if (STREAM_SOURCE !== 'file') return;
+  if (fileHlsProcess) return;
   if (!fs.existsSync(SOURCE_VIDEO_PATH)) {
     console.error(`[FILE-HLS] Không tìm thấy video nguồn: ${SOURCE_VIDEO_PATH}`);
+    scheduleFileHlsRetry();
     return;
   }
 
@@ -163,6 +166,7 @@ function startFileHlsSource() {
     videoInput = prepareVideoInput(SOURCE_VIDEO_PATH);
   } catch (error) {
     console.error(`[FILE-HLS] ${error.message}`);
+    scheduleFileHlsRetry();
     return;
   }
 
@@ -180,6 +184,14 @@ function startFileHlsSource() {
       setTimeout(startFileHlsSource, 5000);
     }
   });
+}
+
+function scheduleFileHlsRetry() {
+  if (STREAM_SOURCE !== 'file' || process.env.FILE_HLS_RESTART === '0' || fileHlsRetryTimer) return;
+  fileHlsRetryTimer = setTimeout(() => {
+    fileHlsRetryTimer = null;
+    startFileHlsSource();
+  }, Number(process.env.FILE_HLS_RETRY_MS || 10000));
 }
 
 // Manually spawn FFmpeg to bypass NMS v4's missing trans module
