@@ -12,29 +12,48 @@ export default function HlsVideoPlayer({ url, className = '', ...rest }) {
     let hls;
     let destroyed = false;
 
-    const play = () => {
+    const getLiveEdge = () => {
+      if (hls && Number.isFinite(hls.liveSyncPosition)) {
+        return hls.liveSyncPosition;
+      }
+
+      if (video.seekable && video.seekable.length > 0) {
+        return video.seekable.end(video.seekable.length - 1);
+      }
+
+      return null;
+    };
+
+    const jumpToLive = (force = false) => {
+      const liveEdge = getLiveEdge();
+      if (!Number.isFinite(liveEdge)) return;
+
+      const target = Math.max(0, liveEdge - 0.25);
+      const drift = Math.abs(target - video.currentTime);
+      if (force || drift > 2) {
+        video.currentTime = target;
+      }
+    };
+
+    const play = (syncToLive = true) => {
       if (destroyed) return;
       video.muted = true;
+      if (syncToLive) jumpToLive(true);
       video.play().then(() => setMessage('')).catch(() => {
         setMessage('Bam nut play de xem live');
       });
     };
 
-    const jumpToLive = () => {
-      if (video.seekable && video.seekable.length > 0) {
-        video.currentTime = video.seekable.end(video.seekable.length - 1);
-      }
-    };
-
     if (video.canPlayType('application/vnd.apple.mpegurl')) {
       video.src = url;
       video.addEventListener('loadedmetadata', jumpToLive, { once: true });
-      video.addEventListener('canplay', play, { once: true });
+      video.addEventListener('canplay', () => play(true), { once: true });
     } else if (Hls.isSupported()) {
       hls = new Hls({
         liveSyncDurationCount: 2,
         maxLiveSyncPlaybackRate: 1.5,
         lowLatencyMode: true,
+        liveDurationInfinity: true,
       });
 
       hls.on(Hls.Events.ERROR, (_, data) => {
@@ -45,23 +64,29 @@ export default function HlsVideoPlayer({ url, className = '', ...rest }) {
         }
       });
 
-      hls.on(Hls.Events.MANIFEST_PARSED, play);
+      hls.on(Hls.Events.MANIFEST_PARSED, () => play(true));
+      hls.on(Hls.Events.LEVEL_UPDATED, () => {
+        if (!video.paused) jumpToLive(false);
+      });
       hls.attachMedia(video);
       hls.loadSource(url);
     } else {
       setMessage('Trinh duyet khong ho tro HLS');
     }
 
+    const handlePlay = () => jumpToLive(true);
     const handleVisibility = () => {
       if (!document.hidden) {
-        jumpToLive();
-        play();
+        jumpToLive(true);
+        play(false);
       }
     };
+    video.addEventListener('play', handlePlay);
     document.addEventListener('visibilitychange', handleVisibility);
 
     return () => {
       destroyed = true;
+      video.removeEventListener('play', handlePlay);
       document.removeEventListener('visibilitychange', handleVisibility);
       if (hls) hls.destroy();
       video.removeAttribute('src');
