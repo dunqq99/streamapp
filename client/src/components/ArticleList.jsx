@@ -1,6 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { apiUrl, assetUrl } from '../lib/api';
+
+function toPlainText(html = '') {
+  if (!html) return '';
+  const textarea = document.createElement('textarea');
+  textarea.innerHTML = html
+    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<[^>]+>/g, ' ');
+
+  return textarea.value
+    .replace(/\u00a0/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 export default function ArticleList({ categorySlug }) {
   const [articles, setArticles] = useState([]);
 
@@ -25,6 +40,7 @@ export default function ArticleList({ categorySlug }) {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
         {articles.map(article => {
           const targetLink = `/${article.category_slug || 'tin-tuc'}/${article.slug || article.id}`;
+          const excerpt = toPlainText(article.content);
           return (
             <Link to={targetLink} key={article.id} style={{ textDecoration: 'none', background: 'var(--panel-bg)', border: '1px solid var(--panel-border)', borderRadius: '12px', overflow: 'hidden', transition: 'transform 0.2s, background 0.2s', cursor: 'pointer', display: 'flex', flexDirection: 'column' }} onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.background = 'var(--card-hover)'; }} onMouseOut={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.background = 'var(--panel-bg)'; }}>
               {article.image_url && (
@@ -36,7 +52,7 @@ export default function ArticleList({ categorySlug }) {
                   <span>{article.date}</span>
                 </div>
                 <h3 style={{ fontSize: '1.1rem', marginBottom: '0.75rem', lineHeight: '1.4', color: 'var(--text-primary)' }}>{article.title}</h3>
-                <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', lineHeight: '1.5', flex: 1, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical' }}>{article.content}</p>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', lineHeight: '1.5', flex: 1, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflowWrap: 'anywhere' }}>{excerpt}</p>
               </div>
             </Link>
           );
