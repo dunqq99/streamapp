@@ -15,12 +15,12 @@ const config = {
     mediaroot: './media'
   },
   auth: {
-    api: true,
-    api_user: 'admin',
-    api_pass: 'admin',
+    api: Boolean(process.env.NMS_API_USER && process.env.NMS_API_PASS),
+    api_user: process.env.NMS_API_USER || '',
+    api_pass: process.env.NMS_API_PASS || '',
     play: true,
     publish: false,
-    secret: process.env.NMS_SECRET_KEY || 'cpc-secret-2026'
+    secret: process.env.NMS_SECRET_KEY
   }
   // NOTE: trans block bị xóa có chủ ý.
   // FFmpeg được spawn thủ công trong postPublish để tránh dual-process conflict.
@@ -34,7 +34,28 @@ const fs = require('fs');
 const path = require('path');
 const { spawn } = require('child_process');
 const sharp = require('sharp');
-const SECRET_KEY = process.env.NMS_SECRET_KEY || 'cpc-secret-2026';
+const SECRET_KEY = process.env.NMS_SECRET_KEY || '';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '';
+if (!ADMIN_PASSWORD) {
+  console.warn('[SECURITY] ADMIN_PASSWORD is not configured. Admin write actions are disabled.');
+}
+if (!SECRET_KEY) {
+  console.warn('[SECURITY] NMS_SECRET_KEY is not configured. Stream token generation may fail.');
+}
+
+function isAdminPassword(password) {
+  return Boolean(ADMIN_PASSWORD && typeof password === 'string' && password === ADMIN_PASSWORD);
+}
+
+function rejectInvalidAdminPassword(password, res) {
+  if (!ADMIN_PASSWORD) {
+    return res.status(503).json({ success: false, message: 'ADMIN_PASSWORD is not configured' });
+  }
+  if (!isAdminPassword(password)) {
+    return res.status(401).json({ success: false, message: 'Sai mật khẩu quản trị' });
+  }
+  return null;
+}
 const FFMPEG_PATH = process.env.FFMPEG_PATH || 'ffmpeg';
 const HLS_STREAM_NAME = process.env.HLS_STREAM_NAME || 'main';
 const STREAM_SOURCE = (process.env.STREAM_SOURCE || 'rtmp').toLowerCase();
@@ -323,19 +344,29 @@ async function _doFetchSchedule() {
   let browser = null;
   try {
     console.log('Fetching SV388 schedule...');
+    const browserArgs = [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage',
+      '--disable-gpu',
+      '--js-flags="--max-old-space-size=512"'
+    ];
+
+    if (process.env.SV388_PROXY_SERVER) {
+      browserArgs.push(`--proxy-server=${process.env.SV388_PROXY_SERVER}`);
+    }
+
     browser = await puppeteerExtra.launch({ 
       headless: 'new', // new headless mode
-      args: [
-        '--no-sandbox', 
-        '--disable-setuid-sandbox',
-        '--proxy-server=http://117.0.73.91:47628',
-        '--disable-dev-shm-usage',
-        '--disable-gpu',
-        '--js-flags="--max-old-space-size=512"'
-      ] 
+      args: browserArgs
     });
     const page = await browser.newPage();
-    await page.authenticate({ username: 'hlQPNN', password: 'IDyFgi' });
+    if (process.env.SV388_PROXY_USERNAME && process.env.SV388_PROXY_PASSWORD) {
+      await page.authenticate({
+        username: process.env.SV388_PROXY_USERNAME,
+        password: process.env.SV388_PROXY_PASSWORD
+      });
+    }
     
     // SV388 is a heavy site, wait until DOM is loaded
     await page.goto('https://www.sv388.com/', { waitUntil: 'domcontentloaded', timeout: 60000 });
@@ -498,16 +529,13 @@ app.get('/api/config', (req, res) => {
 
 app.post('/api/verify-password', express.json(), (req, res) => {
   const { password } = req.body;
-  const adminPass = process.env.ADMIN_PASSWORD || 'admin';
-  res.json({ success: password === adminPass });
+  res.json({ success: isAdminPassword(password) });
 });
 
 app.post('/api/config', express.json(), (req, res) => {
   const { password, data } = req.body;
-  const adminPass = process.env.ADMIN_PASSWORD || 'admin';
-  if (password !== adminPass) {
-    return res.status(401).json({ success: false, message: 'Sai mật khẩu quản trị' });
-  }
+  const authError = rejectInvalidAdminPassword(password, res);
+  if (authError) return authError;
   
   try {
     const mergedData = {
@@ -537,7 +565,7 @@ app.get('/api/categories', async (req, res) => {
 
 app.post('/api/categories', express.json(), async (req, res) => {
   const { password, name, slug } = req.body;
-  if (password !== (process.env.ADMIN_PASSWORD || 'admin')) return res.status(401).json({ success: false });
+  { const authError = rejectInvalidAdminPassword(password, res); if (authError) return authError; }
   try {
     const id = await db.addCategory(name, slug);
     res.json({ success: true, id });
@@ -548,7 +576,7 @@ app.post('/api/categories', express.json(), async (req, res) => {
 
 app.put('/api/categories/:id', express.json(), async (req, res) => {
   const { password, name, slug } = req.body;
-  if (password !== (process.env.ADMIN_PASSWORD || 'admin')) return res.status(401).json({ success: false });
+  { const authError = rejectInvalidAdminPassword(password, res); if (authError) return authError; }
   try {
     await db.updateCategory(req.params.id, name, slug);
     res.json({ success: true });
@@ -559,7 +587,7 @@ app.put('/api/categories/:id', express.json(), async (req, res) => {
 
 app.delete('/api/categories/:id', express.json(), async (req, res) => {
   const { password } = req.body;
-  if (password !== (process.env.ADMIN_PASSWORD || 'admin')) return res.status(401).json({ success: false });
+  { const authError = rejectInvalidAdminPassword(password, res); if (authError) return authError; }
   try {
     await db.deleteCategory(req.params.id);
     res.json({ success: true });
@@ -619,10 +647,8 @@ app.get('/api/articles/:catSlug/:slug', async (req, res) => {
 
 app.post('/api/articles', express.json(), async (req, res) => {
   const { password, ...article } = req.body;
-  const adminPass = process.env.ADMIN_PASSWORD || 'admin';
-  if (password !== adminPass) {
-    return res.status(401).json({ success: false, message: 'Sai mật khẩu quản trị' });
-  }
+  const authError = rejectInvalidAdminPassword(password, res);
+  if (authError) return authError;
   try {
     const id = await db.addArticle(article);
     res.json({ success: true, id });
@@ -633,10 +659,8 @@ app.post('/api/articles', express.json(), async (req, res) => {
 
 app.put('/api/articles/:id', express.json(), async (req, res) => {
   const { password, ...article } = req.body;
-  const adminPass = process.env.ADMIN_PASSWORD || 'admin';
-  if (password !== adminPass) {
-    return res.status(401).json({ success: false, message: 'Sai mật khẩu quản trị' });
-  }
+  const authError = rejectInvalidAdminPassword(password, res);
+  if (authError) return authError;
   try {
     const changes = await db.updateArticle(req.params.id, article);
     if(changes === 0) return res.status(404).json({ success: false, message: 'Article not found' });
@@ -648,10 +672,8 @@ app.put('/api/articles/:id', express.json(), async (req, res) => {
 
 app.delete('/api/articles/:id', express.json(), async (req, res) => {
   const { password } = req.body;
-  const adminPass = process.env.ADMIN_PASSWORD || 'admin';
-  if (password !== adminPass) {
-    return res.status(401).json({ success: false, message: 'Sai mật khẩu quản trị' });
-  }
+  const authError = rejectInvalidAdminPassword(password, res);
+  if (authError) return authError;
   try {
     await db.deleteArticle(req.params.id);
     res.json({ success: true });
@@ -897,21 +919,21 @@ io.on("connection", (socket) => {
 
   // Admin moderation events (in real prod, should verify admin token)
   socket.on("deleteMessage", ({ messageId, adminPassword }) => {
-    if (adminPassword === (process.env.ADMIN_PASSWORD || 'admin')) {
+    if (isAdminPassword(adminPassword)) {
       chatHistory = chatHistory.filter((m) => m.id !== messageId);
       io.emit("messageDeleted", messageId);
     }
   });
 
   socket.on("clearChat", ({ adminPassword }) => {
-    if (adminPassword === (process.env.ADMIN_PASSWORD || 'admin')) {
+    if (isAdminPassword(adminPassword)) {
       chatHistory = [];
       io.emit("chatCleared");
     }
   });
 
   socket.on("banUser", ({ username, adminPassword }) => {
-    if (adminPassword === (process.env.ADMIN_PASSWORD || 'admin')) {
+    if (isAdminPassword(adminPassword)) {
       if (!bannedUsers.includes(username)) {
         bannedUsers.push(username);
       }
@@ -921,7 +943,7 @@ io.on("connection", (socket) => {
   });
 
   socket.on("injectFakeChat", ({ adminPassword, username, text, level }) => {
-    if (adminPassword === (process.env.ADMIN_PASSWORD || 'admin')) {
+    if (isAdminPassword(adminPassword)) {
       const uName = username?.trim() || `Khach${Math.floor(Math.random() * 9999)}`;
       const msg = {
         id: crypto.randomUUID(),
